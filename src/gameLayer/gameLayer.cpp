@@ -78,7 +78,6 @@ bool gameLogic(float deltaTime, platform::Input &input, SDL_Renderer *sdlRendere
 	}
 
 
-
 	//ImGui::ShowDemoWindow();
 	ImGui::PushMakeWindowNotTransparent();
 	ImGui::Begin("Test Imgui");
@@ -91,9 +90,9 @@ bool gameLogic(float deltaTime, platform::Input &input, SDL_Renderer *sdlRendere
 	ImGui::addErrorSymbol();
 	ImGui::addWarningSymbol();
 
-
 	ImGui::PopMakeWindowNotTransparent();
 	ImGui::End();
+
 
 
 

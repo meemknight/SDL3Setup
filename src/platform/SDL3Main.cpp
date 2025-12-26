@@ -65,9 +65,29 @@ namespace platform
 		return {w, h};
 	}
 
+	bool showState = true;
 	void showMouse(bool show)
 	{
-		//SDL_SetCursorVisible(show); TODO
+		if (show)
+		{
+			if (!showState)
+			{
+				showState = true;
+				SDL_SetWindowRelativeMouseMode(window, false);
+				SDL_ShowCursor();
+			}
+		}
+		else
+		{
+			SDL_HideCursor();
+
+			if (showState)
+			{
+				showState = false;
+				SDL_SetWindowRelativeMouseMode(window, true);
+				SDL_HideCursor();
+			}
+		}
 	}
 
 	bool hasFocused() { return windowFocus; }
@@ -158,6 +178,23 @@ static void handleSDLEvent(const SDL_Event &e)
 	}
 }
 
+void updateFullscreen()
+{
+	if (currentFullScreen == fullScreen)
+		return;
+
+	currentFullScreen = fullScreen;
+
+	if (fullScreen)
+	{
+		SDL_SetWindowFullscreen(window, 1);
+	}
+	else
+	{
+		SDL_SetWindowFullscreen(window, 0);
+	}
+}
+
 int main(int, char **)
 {
 	permaAssertComment(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS),
@@ -174,6 +211,8 @@ int main(int, char **)
 	sdlRenderer = SDL_CreateRenderer(window, nullptr);
 	
 	permaAssertComment(sdlRenderer, "SDL renderer creation failed");
+
+	SDL_StartTextInput(window);
 
 
 #pragma region imgui
@@ -201,6 +240,8 @@ int main(int, char **)
 
 	while (true)
 	{
+		updateFullscreen();
+
 		SDL_Event e;
 		while (SDL_PollEvent(&e))
 		{
