@@ -1,7 +1,16 @@
 #pragma once
-#include "imgui.h"
+
+
 #include <glm/vec4.hpp>
 
+//change to remove imgui
+#define REMOVE_IMGUI PRODUCTION_BUILD
+
+
+
+
+#if REMOVE_IMGUI == 0
+#include "imgui.h"
 namespace ImGui
 {
 
@@ -34,3 +43,4 @@ namespace ImGui
 
 
 };
+#endif

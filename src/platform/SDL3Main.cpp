@@ -10,10 +10,16 @@
 #include "gameLayer.h"
 #include "stringManipulation.h"
 
+
+#include "imguiTools.h"
+
+#if REMOVE_IMGUI == 0
 #include "imgui.h"
 #include "backends/imgui_impl_sdl3.h"
 #include "backends/imgui_impl_sdlrenderer3.h"
 #include "imguiThemes.h"
+#include "IconsForkAwesome.h"
+#endif
 
 #undef min
 #undef max
@@ -216,6 +222,7 @@ int main(int, char **)
 
 
 #pragma region imgui
+#if REMOVE_IMGUI == 0
 	ImGui::CreateContext();
 	imguiThemes::embraceTheDarkness();
 
@@ -228,6 +235,53 @@ int main(int, char **)
 
 	ImGui_ImplSDL3_InitForSDLRenderer(window, sdlRenderer);
 	ImGui_ImplSDLRenderer3_Init(sdlRenderer);
+
+	if (1) //load font awesome
+	{
+		//https://pixtur.github.io/mkdocs-for-imgui/site/FONTS/
+		//https://github.com/juliettef/IconFontCppHeaders
+		//https://fontawesome.com/v4/icons/
+
+
+		if (1)
+		{
+			// use the default font
+			io.Fonts->AddFontDefault();
+		}
+		else
+		{
+			//load custom font
+			io.Fonts->AddFontFromFileTTF(RESOURCES_PATH "arial.ttf", 16);
+		}
+
+
+
+		// Merge FontAwesome into the default font
+		ImFontConfig config;
+		config.MergeMode = true;
+		config.PixelSnapH = true;
+		config.GlyphMinAdvanceX = 16.0f; // adjust as needed
+
+		static const ImWchar icon_ranges[] = {ICON_MIN_FK, ICON_MAX_FK, 0};
+		io.Fonts->AddFontFromFileTTF(RESOURCES_PATH "fontawesome-webfont.ttf", 16.0f, &config, icon_ranges);
+
+		// Build fonts after all additions
+		io.Fonts->Build();
+
+		//make one icon larger example
+		//{
+		//	ImVector<ImWchar> ranges;
+		//	ImFontGlyphRangesBuilder builder;
+		//	builder.AddChar(0xf016);//ICON_FK_FILE_O
+		//	builder.AddChar(0xf114);//ICON_FK_FOLDER_O
+		//	builder.BuildRanges(&ranges);
+		//
+		//	io.Fonts->AddFontFromFileTTF(RESOURCES_PATH "fontawesome-webfont.ttf",
+		//		150.f / io.FontGlobalScale, 0, ranges.Data);
+		//}
+
+	}
+#endif
 #pragma endregion
 
 
@@ -245,7 +299,9 @@ int main(int, char **)
 		SDL_Event e;
 		while (SDL_PollEvent(&e))
 		{
+		#if REMOVE_IMGUI == 0
 			ImGui_ImplSDL3_ProcessEvent(&e);
+		#endif
 			handleSDLEvent(e);
 		}
 
@@ -256,6 +312,7 @@ int main(int, char **)
 		dt = std::min(dt, 1.f / 10.f);
 
 	#pragma region imgui
+	#if REMOVE_IMGUI == 0
 		ImGui_ImplSDLRenderer3_NewFrame();
 		ImGui_ImplSDL3_NewFrame();
 		ImGui::NewFrame();
@@ -264,6 +321,7 @@ int main(int, char **)
 		ImGui::PushStyleColor(ImGuiCol_DockingEmptyBg, {});
 		ImGui::DockSpaceOverViewport();
 		ImGui::PopStyleColor(2);
+	#endif
 	#pragma endregion
 
 		platform::Input input = {};
@@ -296,20 +354,22 @@ int main(int, char **)
 		platform::internal::updateAllButtons(dt);
 		platform::internal::resetTypedInput();
 
-
+	#if REMOVE_IMGUI == 0
 		ImGui::Render();
 		ImGui_ImplSDLRenderer3_RenderDrawData(
 			ImGui::GetDrawData(), sdlRenderer);
-
+	#endif
 
 		SDL_RenderPresent(sdlRenderer);
 	}
 
 	closeGame();
 
+#if REMOVE_IMGUI == 0
 	ImGui_ImplSDLRenderer3_Shutdown();
 	ImGui_ImplSDL3_Shutdown();
 	ImGui::DestroyContext();
+#endif
 
 	SDL_DestroyRenderer(sdlRenderer);
 	SDL_DestroyWindow(window);

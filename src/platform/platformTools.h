@@ -75,7 +75,7 @@ public:
 
 #define CONCATENATE_DEFFER(x, y) x##y
 #define MAKE_UNIQUE_VAR_DEFFER(x, y) CONCATENATE_DEFFER(x, y)
-#define defer(func) DeferImpl MAKE_UNIQUE_VAR_DEFFER(_defer_, __COUNTER__)(func)
+#define defer(func) DeferImpl MAKE_UNIQUE_VAR_DEFFER(_defer_, __COUNTER__)( [&]() { func } )
 
 
 #if DEVELOPLEMT_BUILD == 1

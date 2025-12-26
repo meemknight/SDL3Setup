@@ -1,8 +1,9 @@
 #include "imguiTools.h"
-//#include <IconsForkAwesome.h> TODO
-#include "imgui_internal.h"
 
+#if REMOVE_IMGUI == 0
 
+#include <IconsForkAwesome.h>
+#include <imgui_internal.h>
 
 
 bool ImGui::colouredButton(const char *label, glm::vec4 color, const ImVec2 &size_arg)
@@ -16,14 +17,14 @@ bool ImGui::colouredButton(const char *label, glm::vec4 color, const ImVec2 &siz
 void ImGui::addErrorSymbol()
 {
 	::ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 0, 0, 255));
-	//::ImGui::Text(ICON_FK_TIMES_CIRCLE " ");
+	::ImGui::Text(ICON_FK_TIMES_CIRCLE " ");
 	::ImGui::PopStyleColor();
 }
 
 void ImGui::addWarningSymbol()
 {
 	::ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 0, 255));
-	//::ImGui::Text(ICON_FK_EXCLAMATION_TRIANGLE " ");
+	::ImGui::Text(ICON_FK_EXCLAMATION_TRIANGLE " ");
 	::ImGui::PopStyleColor();
 }
 
@@ -129,3 +130,6 @@ bool ImGui::blueButton(const char *label, const ImVec2 &size_arg)
 {
 	return colouredButton(label, {0,0,1,1}, size_arg);
 }
+
+
+#endif

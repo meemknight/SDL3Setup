@@ -82,6 +82,17 @@ namespace platform
 		glm::vec2 LStick = {}, RStick = {};
 
 		void setAllToZero() { *this = Controller(); }
+
+		enum ControllerType : int
+		{
+			unknown = 0,
+			xboxGeneric,
+			xbox360,
+			ps5,
+			psGeneric,
+			switchController,
+			ControllerTypesCount
+		};
 	};
 
 
@@ -145,6 +156,12 @@ namespace platform
 	Controller getControllerButtons();
 	Controller getControllerButtonsAtIndex(int i);
 	std::string getTypedInput();
+
+	bool isControllerConnected(int i);
+
+	std::string getControllerName(int i);
+
+	Controller::ControllerType getControllerType(int i);
 
 	namespace internal
 	{

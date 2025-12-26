@@ -1346,7 +1346,7 @@ namespace gl2d
 		const float sizePixels, const float spacing, const float line_space)
 	{
 
-		if (!font.texture.isValid() == 0)
+		if (!font.texture.isValid())
 		{
 			errorFunc("Missing font", userDefinedData);
 			return {};

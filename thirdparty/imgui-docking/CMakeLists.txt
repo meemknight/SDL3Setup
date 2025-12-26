@@ -10,6 +10,8 @@ target_sources(imgui PRIVATE
 "${CMAKE_CURRENT_SOURCE_DIR}/imgui/imgui_widgets.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_sdl3.cpp"
 "${CMAKE_CURRENT_SOURCE_DIR}/imgui/backends/imgui_impl_sdlrenderer3.cpp"
+"${CMAKE_CURRENT_SOURCE_DIR}/imgui/IconsForkAwesome.h"
+
 )
 
 target_include_directories(imgui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/imgui")

@@ -1,6 +1,7 @@
 #include "platformInput.h"
 #include "gameLayer.h"
 #include <SDL3/SDL.h>
+#include <platformTools.h>
 
 platform::Button keyBoard[platform::Button::BUTTONS_COUNT];
 platform::Button leftMouse;
@@ -101,6 +102,87 @@ std::string platform::getTypedInput()
 	return typedInput;
 }
 
+bool platform::isControllerConnected(int i)
+{
+	int count = 0;
+	SDL_JoystickID *ids = SDL_GetGamepads(&count);
+	if (!ids) return false;
+
+	bool connected = (i >= 0 && i < count);
+
+	SDL_free(ids);
+	return connected;
+}
+
+std::string platform::getControllerName(int i)
+{
+	int count = 0;
+	SDL_JoystickID *ids = SDL_GetGamepads(&count);
+
+	defer( if(ids) SDL_free(ids); );
+
+	if (!ids || i < 0 || i >= count)
+	{
+		return {};
+	}
+
+	SDL_Gamepad *pad = SDL_OpenGamepad(ids[i]);
+
+	if (!pad)
+		return {};
+
+	const char *name = SDL_GetGamepadName(pad);
+	std::string result = name ? name : "";
+
+	SDL_CloseGamepad(pad);
+	return result;
+}
+
+platform::Controller::ControllerType mapSDLControllerType(SDL_GamepadType t)
+{
+	switch (t)
+	{
+	case SDL_GAMEPAD_TYPE_XBOX360:      return platform::Controller::xbox360;
+	case SDL_GAMEPAD_TYPE_XBOXONE:      return platform::Controller::xboxGeneric;
+
+	case SDL_GAMEPAD_TYPE_PS3:
+	case SDL_GAMEPAD_TYPE_PS4:          return platform::Controller::psGeneric;
+	case SDL_GAMEPAD_TYPE_PS5:          return platform::Controller::ps5;
+
+	case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO:
+	case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
+	case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
+	case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+										return platform::Controller::switchController;
+
+	default:                            return platform::Controller::unknown;
+	}
+}
+
+
+platform::Controller::ControllerType platform::getControllerType(int i)
+{
+	int count = 0;
+	SDL_JoystickID *ids = SDL_GetGamepads(&count);
+
+	defer(if (ids) SDL_free(ids); );
+
+	if (!ids || i < 0 || i >= count)
+	{
+		return platform::Controller::unknown;
+	}
+
+	SDL_Gamepad *pad = SDL_OpenGamepad(ids[i]);
+
+	if (!pad)
+		return platform::Controller::unknown;
+
+	SDL_GamepadType sdlType = SDL_GetGamepadType(pad);
+	SDL_CloseGamepad(pad);
+
+	return mapSDLControllerType(sdlType);
+}
+
 void platform::internal::setButtonState(int button, int newState)
 {
 
@@ -195,9 +277,10 @@ void platform::internal::UpdateControllersSDL3(float deltaTime)
 
 	int count = 0;
 	SDL_JoystickID *ids = SDL_GetGamepads(&count);  // free with SDL_free :contentReference[oaicite:4]{index=4}
+	defer(if (ids) SDL_free(ids); );
+
 	if (!ids || count <= 0)
 	{
-		if (ids) SDL_free(ids);
 		return;
 	}
 
@@ -227,14 +310,11 @@ void platform::internal::UpdateControllersSDL3(float deltaTime)
 		const float rx = ApplyDeadzone(NormalizeAxisS16(SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_RIGHTX)));
 		const float ry = ApplyDeadzone(NormalizeAxisS16(SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_RIGHTY)));
 
-		// Triggers are usually [0..1] (some drivers still give [-1..1], normalize if needed)
 		float lt = NormalizeAxisS16(SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_LEFT_TRIGGER));
 		float rt = NormalizeAxisS16(SDL_GetGamepadAxis(pad, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER));
-		lt = (lt + 1.f) * 0.5f;
-		rt = (rt + 1.f) * 0.5f;
 
-		c.LStick = {lx, ly};
-		c.RStick = {rx, ry};
+		c.LStick = {lx, -ly};
+		c.RStick = {rx, -ry};
 		c.LT = (lt < 0.f) ? 0.f : ((lt > 1.f) ? 1.f : lt);
 		c.RT = (rt < 0.f) ? 0.f : ((rt > 1.f) ? 1.f : rt);
 
@@ -244,7 +324,6 @@ void platform::internal::UpdateControllersSDL3(float deltaTime)
 		SDL_CloseGamepad(pad); // :contentReference[oaicite:6]{index=6}
 	}
 
-	SDL_free(ids);
 }
 
 void platform::internal::updateAllButtons(float deltaTime)
