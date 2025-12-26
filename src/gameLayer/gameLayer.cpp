@@ -22,11 +22,17 @@ struct GameData
 
 gl2d::Renderer2D renderer;
 gl2d::Camera camera;
+gl2d::Texture texture;
 
 bool initGame(SDL_Renderer *sdlRenderer)
 {
 
+	gl2d::init();
+
+
 	renderer.create(sdlRenderer);
+
+	texture.loadFromFile(RESOURCES_PATH "panda.png");
 
 
 	return true;
@@ -48,8 +54,7 @@ bool gameLogic(float deltaTime, platform::Input &input, SDL_Renderer *sdlRendere
 	
 	renderer.updateWindowMetrics(w, h);
 
-	//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	//SDL_RenderClear(renderer);
+	renderer.clearScreen(Colors_Orange);
 
 #pragma endregion
 
@@ -92,7 +97,7 @@ bool gameLogic(float deltaTime, platform::Input &input, SDL_Renderer *sdlRendere
 
 
 
-	renderer.renderRectangle({gameData.rectPos, 100, 100}, Colors_Blue);
+	renderer.renderRectangle({gameData.rectPos, 100, 100}, texture);
 
 
 

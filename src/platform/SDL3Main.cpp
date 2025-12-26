@@ -28,9 +28,14 @@ bool windowFocus = true;
 int mouseMovedFlag = 0;
 #pragma endregion
 
-
 namespace platform
 {
+
+	SDL_Renderer *getSdlRenderer()
+	{
+		return ::sdlRenderer;
+	}
+
 	void setRelMousePosition(int x, int y)
 	{
 		SDL_WarpMouseInWindow(window, (float)x, (float)y);

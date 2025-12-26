@@ -152,7 +152,9 @@ namespace gl2d
 	struct Texture
 	{
 		
-		//TODO SDL3
+		SDL_Texture *tex = nullptr;
+		bool isValid() const { return tex != nullptr; }
+
 
 		Texture() {};
 		explicit Texture(const char *file, bool pixelated = GL2D_DEFAULT_TEXTURE_LOAD_MODE_PIXELATED,
@@ -162,7 +164,7 @@ namespace gl2d
 		}
 
 		//returns the texture dimensions
-		glm::ivec2 GetSize();
+		glm::ivec2 GetSize() const;
 
 		//Note: This function expects a buffer of bytes in GL_RGBA format
 		void createFromBuffer(const char *image_data, const int width,

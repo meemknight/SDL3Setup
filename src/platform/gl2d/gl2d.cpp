@@ -1,4 +1,5 @@
 #include "gl2d/gl2d.h"
+#include <gameLayer.h>
 
 //THIS IS A SDL PORT OF GL2D
 
@@ -314,8 +315,9 @@ namespace gl2d
 			fontRgbaBuffer[(i * 4) + 3] = fontMonochromeBuffer[i] > 1 ? 255 : 0;
 		}
 
+		texture.createFromBuffer((char*)fontRgbaBuffer, size.x, size.y, false, false);
+
 		// Init texture
-		// TODO SDL3
 		//glGenTextures(1, &texture.id);
 		//glBindTexture(GL_TEXTURE_2D, texture.id);
 		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, fontRgbaBuffer);
@@ -638,10 +640,9 @@ namespace gl2d
 		renderRectangleAbsRotation(transforms, texture, colors, newOrigin, rotation, textureCoords, positionZ);
 	}
 
-	//TODO SDL3 remove?
 	static inline SDL_FPoint ToSDLPoint(glm::vec2 v)
 	{
-		return SDL_FPoint{v.x, -v.y}; // keep your Y-up -> SDL Y-down fix
+		return SDL_FPoint{v.x, -v.y};
 	}
 
 	static inline SDL_FColor ToSDLColor(const Color4f &c)
@@ -652,7 +653,7 @@ namespace gl2d
 	void RenderPreparedQuad(SDL_Renderer *sdlRenderer,
 		glm::vec2 v1, glm::vec2 v2,
 		glm::vec2 v3, glm::vec2 v4,
-		const Color4f colors[4])
+		const Color4f colors[4], gl2d::Texture texture, const glm::vec4 textureCoords)
 	{
 		SDL_Vertex verts[4];
 
@@ -667,12 +668,36 @@ namespace gl2d
 		verts[2].color = ToSDLColor(colors[2]);
 		verts[3].color = ToSDLColor(colors[3]);
 
-		// texture ignored for now
-		for (int i = 0; i < 4; ++i)
-			verts[i].tex_coord = SDL_FPoint{0.f, 0.f};
-
 		const int indices[6] = {0, 1, 2, 0, 2, 3};
-		SDL_RenderGeometry(sdlRenderer, nullptr, verts, 4, indices, 6);
+
+		if (texture.isValid() && texture.tex != white1pxSquareTexture.tex)
+		{
+			const float u0 = textureCoords.x;
+			const float v0 = textureCoords.y;
+			const float u1 = textureCoords.z;
+			const float v1 = textureCoords.w;
+
+			// 1: (u0,v0) top-left
+			// 2: (u0,v1) bottom-left
+			// 3: (u1,v1) bottom-right
+			// 4: (u1,v0) top-right
+			verts[0].tex_coord = SDL_FPoint{u0, v0};
+			verts[1].tex_coord = SDL_FPoint{u0, v1};
+			verts[2].tex_coord = SDL_FPoint{u1, v1};
+			verts[3].tex_coord = SDL_FPoint{u1, v0};
+
+			SDL_RenderGeometry(sdlRenderer, texture.tex, verts, 4, indices, 6);
+
+		}
+		else
+		{
+			// texture ignored for now
+			for (int i = 0; i < 4; ++i)
+				verts[i].tex_coord = SDL_FPoint{0.f, 0.f};
+
+			SDL_RenderGeometry(sdlRenderer, nullptr, verts, 4, indices, 6);
+		}
+
 	}
 
 	void gl2d::Renderer2D::renderRectangleAbsRotation(const Rect transforms,
@@ -680,12 +705,11 @@ namespace gl2d
 	{
 		Texture textureCopy = texture;
 
-		//TODO SDL3
-		//if (textureCopy.id == 0)
-		//{
-		//	errorFunc("Invalid texture", userDefinedData);
-		//	textureCopy = white1pxSquareTexture;
-		//}
+		if (!textureCopy.isValid())
+		{
+			errorFunc("Invalid texture", userDefinedData);
+			textureCopy = white1pxSquareTexture;
+		}
 
 		const float transformsY = transforms.y * -1;
 
@@ -741,7 +765,7 @@ namespace gl2d
 			v4 = scaleAroundPoint(v4, cameraCenter, currentCamera.zoom);
 		}
 
-		RenderPreparedQuad(sdlRenderer, v1, v2, v3, v4, colors);
+		RenderPreparedQuad(sdlRenderer, v1, v2, v3, v4, colors, texture, textureCoords);
 
 		//v1.x = internal::positionToScreenCoordsX(v1.x, (float)windowW);
 		//v2.x = internal::positionToScreenCoordsX(v2.x, (float)windowW);
@@ -1012,13 +1036,10 @@ namespace gl2d
 	{
 		glm::vec4 colorData[4] = {color, color, color, color};
 
-		int w = 0;
-		int h = 0;
 
-		//TODO SDL3 get texture size
-		//glBindTexture(GL_TEXTURE_2D, texture.id);
-		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+		auto textureSize = texture.GetSize();
+		int w = textureSize.x;
+		int h = textureSize.y;
 
 		float textureSpaceW = textureCoords.z - textureCoords.x;
 		float textureSpaceH = textureCoords.y - textureCoords.w;
@@ -1325,11 +1346,11 @@ namespace gl2d
 		const float sizePixels, const float spacing, const float line_space)
 	{
 
-		//if (font.texture.id == 0) //TODO SDL3
-		//{
-		//	errorFunc("Missing font", userDefinedData);
-		//	return {};
-		//}
+		if (!font.texture.isValid() == 0)
+		{
+			errorFunc("Missing font", userDefinedData);
+			return {};
+		}
 
 		float size = sizePixels / 64.f;
 
@@ -1617,12 +1638,11 @@ namespace gl2d
 
 		float size = sizePixels / 64.f;
 
-		//TODO SDL3
-		//if (font.texture.id == 0)
-		//{
-		//	errorFunc("Missing font", userDefinedData);
-		//	return;
-		//}
+		if (!font.texture.isValid())
+		{
+			errorFunc("Missing font", userDefinedData);
+			return;
+		}
 
 		const int text_length = (int)strlen(text);
 		Rect rectangle;
@@ -1740,11 +1760,19 @@ namespace gl2d
 		return rez;
 	}
 
+	static inline Uint8 f2u8(float v)
+	{
+		v = std::clamp(v, 0.0f, 1.0f);
+		return static_cast<Uint8>(v * 255.0f + 0.5f);
+	}
+
+
 	void Renderer2D::clearScreen(const Color4f color)
 	{
-		
-		//TODO SDL3
-
+		SDL_SetRenderDrawColor(
+			sdlRenderer, f2u8(color.r), f2u8(color.g), f2u8(color.b), f2u8(color.a)
+		);
+		SDL_RenderClear(sdlRenderer);
 	}
 
 	void Renderer2D::setShaderProgram(const ShaderProgram shader)
@@ -1770,57 +1798,42 @@ namespace gl2d
 
 #pragma endregion
 
-	//TODO SDL3
-	glm::ivec2 Texture::GetSize()
+	glm::ivec2 Texture::GetSize() const
 	{
-		return {};
+		if (!tex) return {0, 0};
+
+		float w = 0, h = 0;
+		SDL_GetTextureSize(tex, &w, &h);
+		return {w, h};
 	}
 
 	void Texture::createFromBuffer(const char *image_data, const int width, const int height
 		, bool pixelated, bool useMipMaps)
 	{
-		//TODO SDL3
 
-		//GLuint id = 0;
-		//
-		//glActiveTexture(GL_TEXTURE0);
-		//
-		//glGenTextures(1, &id);
-		//glBindTexture(GL_TEXTURE_2D, id);
-		//
-		//if (pixelated)
-		//{
-		//	if (useMipMaps)
-		//	{
-		//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-		//	}
-		//	else
-		//	{
-		//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		//	}
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		//}
-		//else
-		//{
-		//	if (useMipMaps)
-		//	{
-		//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		//	}
-		//	else
-		//	{
-		//		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		//	}
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		//}
-		//
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		//
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-		//glGenerateMipmap(GL_TEXTURE_2D);
-		//
-		//
-		//this->id = id;
+		if (!image_data || width <= 0 || height <= 0) { return; }
+
+		tex = nullptr;
+
+		// stb typically gives you 8-bit RGBA in memory.
+		// In SDL, ABGR8888 is commonly the “matches RGBA bytes in memory” choice on little-endian.
+		// If your channels look swapped, try SDL_PIXELFORMAT_RGBA8888 instead.
+		tex = SDL_CreateTexture(platform::getSdlRenderer(), SDL_PIXELFORMAT_ABGR8888,
+			SDL_TEXTUREACCESS_STATIC, width, height);
+		if (!tex) { return; } // SDL_GetError()
+
+		// Upload pixels
+		const int pitch = width * 4;
+		SDL_UpdateTexture(tex, nullptr, image_data, pitch);
+
+		// Enable alpha blending (usually what you want for sprites/UI)
+		SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+
+		// Filtering (zoom)
+		SDL_SetTextureScaleMode( tex, pixelated ? SDL_SCALEMODE_NEAREST : SDL_SCALEMODE_LINEAR );
+
+		// Mipmaps: not available via SDL_Renderer textures
+		(void)useMipMaps; // (you'd need SDL_gpu or a backend-specific workaround)
 	}
 
 	void Texture::create1PxSquare(const char *b)
@@ -2058,14 +2071,13 @@ namespace gl2d
 
 	}
 
-	//TODO SDL3
+	//TODO SDL3, Probably not possible without SDL_GPU
 	size_t Texture::getMemorySize(int mipLevel, glm::ivec2 *outSize)
 	{
 		assert(0);
 		return 0;
 	}
 
-	//TODO SDL3
 	void Texture::readTextureData(void *buffer, int mipLevel)
 	{
 		assert(0);
@@ -2089,8 +2101,7 @@ namespace gl2d
 
 	void Texture::cleanup()
 	{
-		//TODO SDL3
-			
+		if (tex) SDL_DestroyTexture(tex);
 		*this = {};
 	}
 

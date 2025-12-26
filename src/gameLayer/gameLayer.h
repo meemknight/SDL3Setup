@@ -48,5 +48,7 @@ namespace platform
 	bool appendToFile(const char *name, void *buffer, size_t s);
 	size_t getFileSize(const char *name);
 
+	SDL_Renderer *getSdlRenderer();
+
 };
 
