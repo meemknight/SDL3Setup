@@ -53,6 +53,12 @@ bool initGame(SDL_Renderer *sdlRenderer)
 
 bool gameLogic(float deltaTime, platform::Input &input, SDL_Renderer *sdlRenderer)
 {
+
+	if(input.isButtonHeld(platform::Button::Q))
+	{
+		platform::setControllerRumble(0, 0.1, 0.7, 10);
+	}
+
 #pragma region init stuff
 	int w = 0; int h = 0;
 	w = platform::getFrameBufferSizeX(); //window w

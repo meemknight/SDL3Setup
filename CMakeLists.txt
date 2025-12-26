@@ -33,6 +33,7 @@ add_subdirectory(thirdparty/stb_image)              # loading images
 add_subdirectory(thirdparty/stb_truetype)           # loading ttf files
 add_subdirectory(thirdparty/glm)                    # math
 add_subdirectory(thirdparty/imgui-docking)          # ui
+add_subdirectory(thirdparty/raudio)					#audio
 
 # MY_SOURCES is defined to be a list of all the source files for my game
 # DON'T ADD THE SOURCES BY HAND, they are already added with this macro
@@ -73,4 +74,5 @@ target_link_libraries("${CMAKE_PROJECT_NAME}" PRIVATE
   stb_truetype
   imgui
   SDL3::SDL3
+  raudio
 )

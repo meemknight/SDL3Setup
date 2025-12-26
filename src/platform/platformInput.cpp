@@ -183,6 +183,33 @@ platform::Controller::ControllerType platform::getControllerType(int i)
 	return mapSDLControllerType(sdlType);
 }
 
+static Uint16 ToU16(float x)
+{
+	if (x < 0.f) x = 0.f;
+	if (x > 1.f) x = 1.f;
+	return (Uint16)(x * 65535.f + 0.5f);
+}
+
+//low represents a low vibrarion motor, and high represents high vibration
+bool platform::setControllerRumble(int i, float lowVibration, float highVibration, uint32_t ms)
+{
+	int count = 0;
+	SDL_JoystickID *ids = SDL_GetGamepads(&count);
+	if (!ids || i < 0 || i >= count) { SDL_free(ids); return false; }  // SDL_GetGamepads returns heap memory
+	SDL_JoystickID id = ids[i];
+	SDL_free(ids);
+
+	SDL_Gamepad *pad = SDL_OpenGamepad(id);
+	if (!pad) return false;
+
+	// If your loop isn’t polling events, you can uncomment:
+	// SDL_UpdateJoysticks();  // helps keep rumble state updated
+
+	const bool ok = SDL_RumbleGamepad(pad, ToU16(lowVibration), ToU16(highVibration), ms);
+	SDL_CloseGamepad(pad);
+	return ok;
+}
+
 void platform::internal::setButtonState(int button, int newState)
 {
 

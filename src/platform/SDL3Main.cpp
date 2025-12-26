@@ -10,6 +10,7 @@
 #include "gameLayer.h"
 #include "stringManipulation.h"
 
+#include <raudio.h>
 
 #include "imguiTools.h"
 
@@ -109,9 +110,6 @@ namespace platform
 	}
 }
 
-// ==============================
-// SDL input translation
-// ==============================
 static void handleSDLEvent(const SDL_Event &e)
 {
 	switch (e.type)
@@ -220,6 +218,16 @@ int main(int, char **)
 
 	SDL_StartTextInput(window);
 
+#pragma region audio
+	//InitAudioDevice();
+
+	//Music m = LoadMusicStream(RESOURCES_PATH "target.ogg");
+	//Music m = {};
+	//UpdateMusicStream(m);
+	//StopMusicStream(m);
+	//PlayMusicStream(m);
+
+#pragma endregion
 
 #pragma region imgui
 #if REMOVE_IMGUI == 0

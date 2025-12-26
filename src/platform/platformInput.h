@@ -163,6 +163,8 @@ namespace platform
 
 	Controller::ControllerType getControllerType(int i);
 
+	bool setControllerRumble(int i, float lowVibration, float highVibration, uint32_t ms);
+
 	namespace internal
 	{
 
