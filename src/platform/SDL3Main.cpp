@@ -197,7 +197,7 @@ void updateFullscreen()
 
 int main(int, char **)
 {
-	permaAssertComment(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS),
+	permaAssertComment(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_GAMEPAD),
 		"SDL init failed");
 
 	window = SDL_CreateWindow(
@@ -275,6 +275,14 @@ int main(int, char **)
 		input.lMouse = platform::getLMouseButton();
 		input.rMouse = platform::getRMouseButton();
 		strlcpy(input.typedInput, platform::getTypedInput(), sizeof(input.typedInput));
+
+		input.controller = platform::getControllerButtons();
+
+		for (int i = 0; i < 4; i++)
+		{
+			input.controllers[i] = platform::getControllerButtonsAtIndex(i);
+		}
+
 
 		SDL_SetRenderDrawColor(sdlRenderer, 0, 0, 0, 255);
 		SDL_RenderClear(sdlRenderer);

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <glm/vec2.hpp>
 
 namespace platform
 {
@@ -60,48 +61,29 @@ namespace platform
 		}
 	}
 
-
+	
 	struct Controller
 	{
-		//TODO
+		enum Buttons
+		{
+			A, B, X, Y,
+			LBumper, RBumper,
+			Back, Start, Guide,
+			LThumb, RThumb,
+			Up, Right, Down, Left,
+			ButtonCount
+		};
+
+		Button buttons[ButtonCount] = {};
+
+		float LT = 0.f;
+		float RT = 0.f;
+
+		glm::vec2 LStick = {}, RStick = {};
+
+		void setAllToZero() { *this = Controller(); }
 	};
-	
-	//struct Controller
-	//{
-	//	enum Buttons
-	//	{
-	//		A = GLFW_GAMEPAD_BUTTON_A,           
-	//		B = GLFW_GAMEPAD_BUTTON_B,           
-	//		X = GLFW_GAMEPAD_BUTTON_X,           
-	//		Y = GLFW_GAMEPAD_BUTTON_Y,           
-	//		LBumper = GLFW_GAMEPAD_BUTTON_LEFT_BUMPER, 
-	//		RBumper = GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER,
-	//		Back = GLFW_GAMEPAD_BUTTON_BACK,
-	//		Start = GLFW_GAMEPAD_BUTTON_START,       
-	//		Guide = GLFW_GAMEPAD_BUTTON_GUIDE,      
-	//		LThumb = GLFW_GAMEPAD_BUTTON_LEFT_THUMB,  
-	//		Rthumb = GLFW_GAMEPAD_BUTTON_RIGHT_THUMB, 
-	//		Up = GLFW_GAMEPAD_BUTTON_DPAD_UP,   
-	//		Right = GLFW_GAMEPAD_BUTTON_DPAD_RIGHT,  
-	//		Down = GLFW_GAMEPAD_BUTTON_DPAD_DOWN, 
-	//		Left = GLFW_GAMEPAD_BUTTON_DPAD_LEFT,  
-	//	};
-	//
-	//	Button buttons[GLFW_GAMEPAD_BUTTON_LAST + 1] = {};
-	//
-	//	float LT = 0.f;
-	//	float RT = 0.f;
-	//
-	//	struct
-	//	{
-	//		float x = 0.f, y = 0.f;
-	//	}LStick, RStick;
-	//
-	//	void setAllToZero()
-	//	{
-	//		*this = Controller();
-	//	}
-	//};
+
 
 	struct Input
 	{
@@ -122,6 +104,7 @@ namespace platform
 		bool hasFocus = 0;
 
 		Controller controller = {};
+		Controller controllers[4] = {};
 
 		int isButtonHeld(int key) { return buttons[key].held; };
 		int isButtonPressed(int key) { return buttons[key].pressed; };
@@ -160,6 +143,7 @@ namespace platform
 	int isRMouseHeld();
 
 	Controller getControllerButtons();
+	Controller getControllerButtonsAtIndex(int i);
 	std::string getTypedInput();
 
 	namespace internal
@@ -239,6 +223,8 @@ namespace platform
 
 		void addToTypedInput(char c);
 		void resetTypedInput();
+
+		void UpdateControllersSDL3(float deltaTime);
 
 	};
 

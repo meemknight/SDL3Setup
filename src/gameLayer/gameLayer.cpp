@@ -38,6 +38,53 @@ bool initGame(SDL_Renderer *sdlRenderer)
 	return true;
 }
 
+#include <algorithm> // std::clamp
+
+static void DrawStickGrid(const char *label, float x, float y, float size = 140.0f)
+{
+	// clamp to expected range
+	x = std::clamp(x, -1.0f, 1.0f);
+	y = std::clamp(y, -1.0f, 1.0f);
+
+	ImGui::TextUnformatted(label);
+
+	ImVec2 p0 = ImGui::GetCursorScreenPos();
+	ImVec2 p1 = ImVec2(p0.x + size, p0.y + size);
+
+	ImGui::InvisibleButton(label, ImVec2(size, size));
+
+	ImDrawList *dl = ImGui::GetWindowDrawList();
+
+	// background + border
+	dl->AddRectFilled(p0, p1, IM_COL32(20, 20, 20, 255));
+	dl->AddRect(p0, p1, IM_COL32(120, 120, 120, 255));
+
+	// grid lines
+	for (int i = 1; i < 4; i++)
+	{
+		float t = i / 4.0f;
+		float gx = p0.x + t * size;
+		float gy = p0.y + t * size;
+		dl->AddLine(ImVec2(gx, p0.y), ImVec2(gx, p1.y), IM_COL32(60, 60, 60, 255));
+		dl->AddLine(ImVec2(p0.x, gy), ImVec2(p1.x, gy), IM_COL32(60, 60, 60, 255));
+	}
+
+	// axes (center cross)
+	ImVec2 c((p0.x + p1.x) * 0.5f, (p0.y + p1.y) * 0.5f);
+	dl->AddLine(ImVec2(c.x, p0.y), ImVec2(c.x, p1.y), IM_COL32(90, 90, 90, 255));
+	dl->AddLine(ImVec2(p0.x, c.y), ImVec2(p1.x, c.y), IM_COL32(90, 90, 90, 255));
+
+	// map stick space to widget space
+	// x: -1..1 -> left..right
+	// y: -1..1 -> up..down  (invert if you want up=+1)
+	float px = c.x + x * (size * 0.5f);
+	float py = c.y + y * (size * 0.5f);
+
+	dl->AddCircleFilled(ImVec2(px, py), 5.0f, IM_COL32(255, 255, 255, 255));
+
+	ImGui::Text("x: %.3f  y: %.3f", x, y);
+}
+
 
 //IMPORTANT NOTICE, IF YOU WANT TO SHIP THE GAME TO ANOTHER PC READ THE README.MD IN THE GITHUB
 //https://github.com/meemknight/cmakeSetup
@@ -77,6 +124,8 @@ bool gameLogic(float deltaTime, platform::Input &input, SDL_Renderer *sdlRendere
 		gameData.rectPos.y += deltaTime * 100;
 	}
 
+	
+
 
 	//ImGui::ShowDemoWindow();
 	ImGui::PushMakeWindowNotTransparent();
@@ -89,6 +138,9 @@ bool gameLogic(float deltaTime, platform::Input &input, SDL_Renderer *sdlRendere
 
 	ImGui::addErrorSymbol();
 	ImGui::addWarningSymbol();
+
+	DrawStickGrid("LStick", input.controller.LStick.x, input.controller.LStick.y);
+	DrawStickGrid("RStick", input.controller.RStick.x, input.controller.RStick.y);
 
 	ImGui::PopMakeWindowNotTransparent();
 	ImGui::End();
