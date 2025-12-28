@@ -119,7 +119,7 @@ std::string platform::getControllerName(int i)
 	int count = 0;
 	SDL_JoystickID *ids = SDL_GetGamepads(&count);
 
-	defer( if(ids) SDL_free(ids); );
+	defer(if (ids) SDL_free(ids); );
 
 	if (!ids || i < 0 || i >= count)
 	{
@@ -153,7 +153,7 @@ platform::Controller::ControllerType mapSDLControllerType(SDL_GamepadType t)
 	case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
 	case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
 	case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
-										return platform::Controller::switchController;
+	return platform::Controller::switchController;
 
 	default:                            return platform::Controller::unknown;
 	}
@@ -233,27 +233,27 @@ static SDL_GamepadButton ToSDLButton(platform::Controller::Buttons b)
 {
 	switch (b)
 	{
-		case platform::Controller::A:       return SDL_GAMEPAD_BUTTON_SOUTH;
-		case platform::Controller::B:       return SDL_GAMEPAD_BUTTON_EAST;
-		case platform::Controller::X:       return SDL_GAMEPAD_BUTTON_WEST;
-		case platform::Controller::Y:       return SDL_GAMEPAD_BUTTON_NORTH;
+	case platform::Controller::A:       return SDL_GAMEPAD_BUTTON_SOUTH;
+	case platform::Controller::B:       return SDL_GAMEPAD_BUTTON_EAST;
+	case platform::Controller::X:       return SDL_GAMEPAD_BUTTON_WEST;
+	case platform::Controller::Y:       return SDL_GAMEPAD_BUTTON_NORTH;
 
-		case platform::Controller::LBumper: return SDL_GAMEPAD_BUTTON_LEFT_SHOULDER;
-		case platform::Controller::RBumper: return SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER;
+	case platform::Controller::LBumper: return SDL_GAMEPAD_BUTTON_LEFT_SHOULDER;
+	case platform::Controller::RBumper: return SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER;
 
-		case platform::Controller::Back:    return SDL_GAMEPAD_BUTTON_BACK;
-		case platform::Controller::Start:   return SDL_GAMEPAD_BUTTON_START;
-		case platform::Controller::Guide:   return SDL_GAMEPAD_BUTTON_GUIDE;
+	case platform::Controller::Back:    return SDL_GAMEPAD_BUTTON_BACK;
+	case platform::Controller::Start:   return SDL_GAMEPAD_BUTTON_START;
+	case platform::Controller::Guide:   return SDL_GAMEPAD_BUTTON_GUIDE;
 
-		case platform::Controller::LThumb:  return SDL_GAMEPAD_BUTTON_LEFT_STICK;
-		case platform::Controller::RThumb:  return SDL_GAMEPAD_BUTTON_RIGHT_STICK;
+	case platform::Controller::LThumb:  return SDL_GAMEPAD_BUTTON_LEFT_STICK;
+	case platform::Controller::RThumb:  return SDL_GAMEPAD_BUTTON_RIGHT_STICK;
 
-		case platform::Controller::Up:      return SDL_GAMEPAD_BUTTON_DPAD_UP;
-		case platform::Controller::Right:   return SDL_GAMEPAD_BUTTON_DPAD_RIGHT;
-		case platform::Controller::Down:    return SDL_GAMEPAD_BUTTON_DPAD_DOWN;
-		case platform::Controller::Left:    return SDL_GAMEPAD_BUTTON_DPAD_LEFT;
+	case platform::Controller::Up:      return SDL_GAMEPAD_BUTTON_DPAD_UP;
+	case platform::Controller::Right:   return SDL_GAMEPAD_BUTTON_DPAD_RIGHT;
+	case platform::Controller::Down:    return SDL_GAMEPAD_BUTTON_DPAD_DOWN;
+	case platform::Controller::Left:    return SDL_GAMEPAD_BUTTON_DPAD_LEFT;
 
-		default:                  return SDL_GAMEPAD_BUTTON_INVALID;
+	default:                  return SDL_GAMEPAD_BUTTON_INVALID;
 	}
 }
 
@@ -298,9 +298,6 @@ static void MergeIntoAggregate(platform::Controller &agg, const platform::Contro
 
 void platform::internal::UpdateControllersSDL3(float deltaTime)
 {
-	// reset outputs
-	controller.setAllToZero();
-	for (int i = 0; i < 4; i++) controllers[i].setAllToZero();
 
 	int count = 0;
 	SDL_JoystickID *ids = SDL_GetGamepads(&count);  // free with SDL_free :contentReference[oaicite:4]{index=4}
@@ -326,6 +323,11 @@ void platform::internal::UpdateControllersSDL3(float deltaTime)
 			const SDL_GamepadButton sb = ToSDLButton((Controller::Buttons)b);
 			const bool down = (sb != SDL_GAMEPAD_BUTTON_INVALID) && SDL_GetGamepadButton(pad, sb);
 
+			if (b == Controller::Up)
+			{
+				int a = 0;
+			}
+
 			// mirror your old logic:
 			processEventButton(c.buttons[b], down ? 1 : 0);
 			updateButton(c.buttons[b], deltaTime);
@@ -345,10 +347,11 @@ void platform::internal::UpdateControllersSDL3(float deltaTime)
 		c.LT = (lt < 0.f) ? 0.f : ((lt > 1.f) ? 1.f : lt);
 		c.RT = (rt < 0.f) ? 0.f : ((rt > 1.f) ? 1.f : rt);
 
-		// merge into amalgamation
+		// merge into agregate
+		controller.setAllToZero();
 		MergeIntoAggregate(controller, c);
 
-		SDL_CloseGamepad(pad); // :contentReference[oaicite:6]{index=6}
+		SDL_CloseGamepad(pad); //
 	}
 
 }
@@ -359,10 +362,10 @@ void platform::internal::updateAllButtons(float deltaTime)
 	{
 		updateButton(keyBoard[i], deltaTime);
 	}
-
+	
 	updateButton(leftMouse, deltaTime);
 	updateButton(rightMouse, deltaTime);
-	
+
 	UpdateControllersSDL3(deltaTime);
 
 }
@@ -378,9 +381,9 @@ void platform::internal::resetInputsToZero()
 
 	resetButtonToZero(leftMouse);
 	resetButtonToZero(rightMouse);
-	
-	//TODO SDL3
-	//controllerButtons.setAllToZero();
+
+	// reset outputs
+	for (int i = 0; i < 4; i++) controllers[i].setAllToZero();
 }
 
 void platform::internal::addToTypedInput(char c)
